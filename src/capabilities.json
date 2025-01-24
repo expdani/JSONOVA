@@ -1,0 +1,209 @@
+{
+  "response_format": {
+    "action": {
+      "type": "calendar",
+      "action": "The specific action to perform (create_event, update_event, delete_event, list_events)",
+      "data": "Event data matching the action's required format"
+    }
+  },
+  "response_rules": [
+    "For simple responses without actions, just include the message",
+    "For actions, still always include a message",
+    "Always format responses as valid JSON"
+  ],
+  "integrations": {
+    "calendar": {
+      "description": "Manage Google Calendar events and appointments",
+      "understanding": [
+        "Creating new calendar events with detailed information",
+        "Updating existing calendar events",
+        "Deleting calendar events",
+        "Listing upcoming events",
+        "Setting event reminders",
+        "Handling recurring events"
+      ],
+      "examples": [
+        "Schedule a team meeting tomorrow at 2pm",
+        "Add a dentist appointment next Tuesday at 10am",
+        "Change my 2pm meeting to start at 3pm",
+        "Cancel my dentist appointment",
+        "What meetings do I have today?",
+        "Schedule a weekly team sync every Monday at 10am"
+      ],
+      "actions": {
+        "create_event": {
+          "description": "Create a new calendar event",
+          "data": {
+            "event": {
+              "summary": "string - Title of the event",
+              "location": "string (optional) - Location of the event",
+              "description": "string (optional) - Description of the event",
+              "start": {
+                "dateTime": "string - Start time in ISO format with timezone (e.g., 2025-01-24T14:00:00-07:00)",
+                "timeZone": "string - Timezone (e.g., America/Los_Angeles)"
+              },
+              "end": {
+                "dateTime": "string - End time in ISO format with timezone (e.g., 2025-01-24T15:00:00-07:00)",
+                "timeZone": "string - Timezone (e.g., America/Los_Angeles)"
+              },
+              "recurrence": "array (optional) - Recurrence rules (e.g., ['RRULE:FREQ=DAILY;COUNT=2'])",
+              "reminders": {
+                "useDefault": "boolean - Whether to use default reminders",
+                "overrides": "array (optional) - Custom reminders [{method: 'email|popup', minutes: number}]"
+              }
+            }
+          },
+          "example": {
+            "event": {
+              "summary": "Google I/O 2015",
+              "location": "800 Howard St., San Francisco, CA 94103",
+              "description": "A chance to hear more about Google's developer products.",
+              "start": {
+                "dateTime": "2015-05-28T09:00:00-07:00",
+                "timeZone": "America/Los_Angeles"
+              },
+              "end": {
+                "dateTime": "2015-05-28T17:00:00-07:00",
+                "timeZone": "America/Los_Angeles"
+              },
+              "recurrence": [
+                "RRULE:FREQ=DAILY;COUNT=2"
+              ],
+              "reminders": {
+                "useDefault": false,
+                "overrides": [
+                  {"method": "email", "minutes": 1440},
+                  {"method": "popup", "minutes": 10}
+                ]
+              }
+            }
+          }
+        },
+        "update_event": {
+          "description": "Update an existing calendar event",
+          "data": {
+            "eventId": "string - The ID of the event to update",
+            "event": "object - Same structure as create_event, all fields optional"
+          }
+        },
+        "delete_event": {
+          "description": "Delete a calendar event",
+          "data": {
+            "eventId": "string - The ID of the event to delete"
+          }
+        },
+        "list_events": {
+          "description": "List upcoming calendar events",
+          "data": {
+            "maxResults": "number (optional) - Maximum number of events to return (default: 10)",
+            "timeMin": "string (optional) - Start time in ISO format (default: current time)"
+          }
+        }
+      }
+    },
+    "gmail": {
+      "description": "Manage Gmail emails",
+      "understanding": [
+        "Listing recent emails",
+        "Searching for emails",
+        "Getting full details of a specific email"
+      ],
+      "examples": [
+        "Show me my recent emails",
+        "Find emails from John Doe",
+        "Get the full details of this email"
+      ],
+      "actions": {
+        "list_emails": {
+          "description": "List recent emails",
+          "parameters": {
+            "maxResults": "Maximum number of emails to return (default: 10)",
+            "labelIds": "Optional list of label IDs to filter by"
+          }
+        },
+        "search_emails": {
+          "description": "Search for emails",
+          "parameters": {
+            "query": "Search query string (supports Gmail search operators)",
+            "maxResults": "Maximum number of results to return (default: 10)"
+          }
+        },
+        "get_email": {
+          "description": "Get full details of a specific email",
+          "parameters": {
+            "messageId": "ID of the email message to retrieve"
+          }
+        }
+      }
+    },
+    "hue": {
+      "description": "Control Philips Hue smart lights",
+      "understanding": [
+        "Turning lights on/off",
+        "Adjusting brightness",
+        "Changing light colors",
+        "Listing all lights",
+        "Controlling rooms/groups",
+        "Turning all lights on/off"
+      ],
+      "examples": [
+        "Turn on the living room lights",
+        "Dim the kitchen lights to 50%",
+        "Change the bedroom lights to blue",
+        "List all lights in the house",
+        "Turn off all lights"
+      ],
+      "actions": {
+        "turn_on": {
+          "description": "Turn on a light or group of lights",
+          "data": {
+            "lightId": "string - The ID of the light to turn on",
+            "groupId": "string (optional) - The ID of the group to turn on"
+          }
+        },
+        "turn_off": {
+          "description": "Turn off a light or group of lights",
+          "data": {
+            "lightId": "string - The ID of the light to turn off",
+            "groupId": "string (optional) - The ID of the group to turn off"
+          }
+        },
+        "adjust_brightness": {
+          "description": "Adjust the brightness of a light or group of lights",
+          "data": {
+            "lightId": "string - The ID of the light to adjust",
+            "groupId": "string (optional) - The ID of the group to adjust",
+            "brightness": "number - The new brightness level (0-100)"
+          }
+        },
+        "change_color": {
+          "description": "Change the color of a light or group of lights",
+          "data": {
+            "lightId": "string - The ID of the light to change",
+            "groupId": "string (optional) - The ID of the group to change",
+            "color": "string - The new color (e.g., 'red', 'blue', etc.)"
+          }
+        },
+        "list_lights": {
+          "description": "List all lights in the system",
+          "data": {}
+        },
+        "control_group": {
+          "description": "Control a group of lights",
+          "data": {
+            "groupId": "string - The ID of the group to control",
+            "action": "string - The action to perform (on, off, etc.)"
+          }
+        },
+        "turn_all_on": {
+          "description": "Turn on all lights in the system",
+          "data": {}
+        },
+        "turn_all_off": {
+          "description": "Turn off all lights in the system",
+          "data": {}
+        }
+      }
+    }
+  }
+}
