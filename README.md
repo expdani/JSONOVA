@@ -1,12 +1,15 @@
 # JSONOVA (JSON-Oriented Virtual Assistant)
 
-A smart integration platform that combines Philips Hue smart lighting, Google services (Gmail and Calendar), and AI capabilities through a JSON-based communication protocol.
+A smart integration platform that combines Philips Hue, Google services (Gmail and Calendar), and AI capabilities through a JSON-based communication.
 
-## Prerequisites
+## Requirements
 
 - Node.js (v22)
 - yarn package manager
-- Philips Hue Bridge on your local network
+  
+## Requirements for integrations
+
+- Philips Hue Bridge on your local network 
 - Google Cloud Platform account
 
 ## Installation
