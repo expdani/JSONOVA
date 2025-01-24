@@ -1,29 +1,20 @@
 import { Request } from 'express';
 import { GoogleCalendarService } from './google-calendar.service';
-import { TokenService } from './token.service';
 import { GmailService } from './gmail.service';
 import { PhilipsHueService } from './philips-hue.service';
 
 export class ActionService {
   private calendarService: GoogleCalendarService;
-  private tokenService: TokenService;
   private gmailService: GmailService;
   private hueService: PhilipsHueService;
 
   constructor() {
     this.calendarService = GoogleCalendarService.getInstance();
-    this.tokenService = TokenService.getInstance();
     this.gmailService = GmailService.getInstance();
     this.hueService = PhilipsHueService.getInstance();
   }
 
-  async executeAction(action: { name: string; parameters: any }, req: Request): Promise<any> {
-    // Check if we have valid tokens
-    const tokens = this.tokenService.getTokens(req);
-    if (!tokens && action.name !== 'list_lights') {
-      throw new Error('No authentication tokens found');
-    }
-
+  async executeAction(action: { name: string; parameters: any }, req: Request): Promise<any> {    
     switch (action.name) {
       // Calendar actions
       case 'list_events':

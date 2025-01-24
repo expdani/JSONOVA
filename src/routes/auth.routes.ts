@@ -24,15 +24,8 @@ router.get('/auth/google/callback', async (req: Request<{}, {}, {}, AuthCallback
     if (!code) {
       throw new Error('No authorization code provided');
     }
-
-    // Get tokens from Google OAuth
     const tokens = await oauthService.getTokens(code);
-    console.log('Received tokens from Google:', tokens);
-
-    // Set credentials for calendar service
     calendarService.setCredentials(tokens);
-
-    // Store tokens in cookie
     tokenService.setTokens(tokens, res);
 
     res.send('Authentication successful! You can close this window.');
@@ -42,13 +35,11 @@ router.get('/auth/google/callback', async (req: Request<{}, {}, {}, AuthCallback
   }
 });
 
-// Add an endpoint to check authentication status
 router.get('/auth/status', (req: Request, res: Response) => {
   const tokens = tokenService.getTokens(req);
   res.json({ 
     authenticated: !!tokens,
     tokens: tokens ? {
-      // Only send non-sensitive parts of the token
       scope: tokens.scope,
       expiry_date: tokens.expiry_date,
       token_type: tokens.token_type
@@ -56,7 +47,6 @@ router.get('/auth/status', (req: Request, res: Response) => {
   });
 });
 
-// Add logout endpoint
 router.post('/auth/logout', (_req: Request, res: Response) => {
   tokenService.clearTokens(res);
   res.json({ success: true });

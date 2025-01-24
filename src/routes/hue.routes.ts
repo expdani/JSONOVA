@@ -4,7 +4,6 @@ import { PhilipsHueService } from '../services/philips-hue.service';
 const router = Router();
 const hueService = PhilipsHueService.getInstance();
 
-// Discover bridge
 router.get('/bridge/discover', async (_req: Request, res: Response) => {
   try {
     const bridgeIp = await hueService.getBridgeIp();
@@ -15,7 +14,6 @@ router.get('/bridge/discover', async (_req: Request, res: Response) => {
   }
 });
 
-// Create user (link button must be pressed first)
 router.post('/bridge/link', async (_req: Request, res: Response) => {
   try {
     const username = await hueService.createUser();
@@ -41,14 +39,15 @@ router.post('/bridge/link', async (_req: Request, res: Response) => {
   }
 });
 
-// Test connection
 router.get('/test', async (_req: Request, res: Response) => {
   try {
     const lights = await hueService.getAllLights();
+    const rooms = await hueService.getAllRooms();
     res.json({ 
       success: true, 
       message: 'Successfully connected to Hue bridge',
-      lights 
+      lights,
+      rooms
     });
   } catch (error) {
     console.error('Error testing connection:', error);

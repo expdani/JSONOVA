@@ -57,7 +57,6 @@ export class OAuthService {
       throw new Error('No access token received');
     }
 
-    // Handle potential null values from Google OAuth response
     const googleTokens: GoogleTokens = {
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token || undefined,

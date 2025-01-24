@@ -137,7 +137,7 @@
       }
     },
     "hue": {
-      "description": "Control Philips Hue smart lights",
+      "description": "Control Philips Hue smart lights. You can execute multiple actions at once by returning an array of actions. IMPORTANT: When matching light names, use fuzzy matching and look for partial matches in the light names. Always verify that the lightId exists in the current state before using it.",
       "understanding": [
         "Turning lights on/off",
         "Adjusting brightness",
@@ -151,36 +151,63 @@
         "Dim the kitchen lights to 50%",
         "Change the bedroom lights to blue",
         "List all lights in the house",
-        "Turn off all lights"
+        "Turn off all lights",
+        "Create a scene by executing multiple actions: [{ action: 'turn_on', data: { groupId: 'living_room' }}, { action: 'change_color', data: { groupId: 'living_room', color: 'purple' }}, { action: 'adjust_brightness', data: { groupId: 'living_room', brightness: 80 }}]"
       ],
+      "light_matching": {
+        "description": "How to match light names in user requests:",
+        "rules": [
+          "Use fuzzy matching to find lights - the user might not type the exact name",
+          "Look for partial matches in the light names",
+          "Example: 'kantoor 2' should match 'Kantoor 2 lamp'",
+          "Always verify the lightId exists in the current state",
+          "Never use a lightId that doesn't exist in the current state"
+        ]
+      },
+      "response_format": {
+        "single_action": {
+          "action": {
+            "action": "string (one of the available actions)",
+            "data": "object containing action parameters"
+          }
+        },
+        "multiple_actions": {
+          "actions": [
+            {
+              "action": "string (one of the available actions)",
+              "data": "object containing action parameters"
+            }
+          ]
+        }
+      },
       "actions": {
         "turn_on": {
-          "description": "Turn on a light or group of lights",
+          "description": "Turn on a light or group of lights. IMPORTANT: Use lightId for specific lights, groupId for rooms. When matching light names, use fuzzy matching (e.g., 'kantoor 2' should match 'Kantoor 2 lamp'). Always verify the lightId exists.",
           "data": {
-            "lightId": "string - The ID of the light to turn on",
-            "groupId": "string (optional) - The ID of the group to turn on"
+            "lightId": "string - The ID of the specific light to turn on. Must exist in current state. Use fuzzy name matching to find the light.",
+            "groupId": "string (optional) - The ID of the room/group to turn on (use this only when referring to an entire room)"
           }
         },
         "turn_off": {
-          "description": "Turn off a light or group of lights",
+          "description": "Turn off a light or group of lights. IMPORTANT: Use lightId for specific lights, groupId for rooms. When matching light names, use fuzzy matching (e.g., 'kantoor 2' should match 'Kantoor 2 lamp'). Always verify the lightId exists.",
           "data": {
-            "lightId": "string - The ID of the light to turn off",
-            "groupId": "string (optional) - The ID of the group to turn off"
+            "lightId": "string - The ID of the specific light to turn off. Must exist in current state. Use fuzzy name matching to find the light.",
+            "groupId": "string (optional) - The ID of the room/group to turn off (use this only when referring to an entire room)"
           }
         },
         "adjust_brightness": {
-          "description": "Adjust the brightness of a light or group of lights",
+          "description": "Adjust the brightness of a light or group of lights. IMPORTANT: Use lightId for specific lights, groupId for rooms. When matching light names, use fuzzy matching (e.g., 'kantoor 2' should match 'Kantoor 2 lamp'). Always verify the lightId exists.",
           "data": {
-            "lightId": "string - The ID of the light to adjust",
-            "groupId": "string (optional) - The ID of the group to adjust",
+            "lightId": "string - The ID of the specific light to adjust. Must exist in current state. Use fuzzy name matching to find the light.",
+            "groupId": "string (optional) - The ID of the room/group to adjust (use this only when referring to an entire room)",
             "brightness": "number - The new brightness level (0-100)"
           }
         },
         "change_color": {
-          "description": "Change the color of a light or group of lights",
+          "description": "Change the color of a light or group of lights. IMPORTANT: Use lightId for specific lights, groupId for rooms. When matching light names, use fuzzy matching (e.g., 'kantoor 2' should match 'Kantoor 2 lamp'). Always verify the lightId exists.",
           "data": {
-            "lightId": "string - The ID of the light to change",
-            "groupId": "string (optional) - The ID of the group to change",
+            "lightId": "string - The ID of the specific light to change. Must exist in current state. Use fuzzy name matching to find the light.",
+            "groupId": "string (optional) - The ID of the room/group to change (use this only when referring to an entire room)",
             "color": "string - The new color (e.g., 'red', 'blue', etc.)"
           }
         },
@@ -189,7 +216,7 @@
           "data": {}
         },
         "control_group": {
-          "description": "Control a group of lights",
+          "description": "Control a group of lights. Only use this when explicitly controlling an entire room.",
           "data": {
             "groupId": "string - The ID of the group to control",
             "action": "string - The action to perform (on, off, etc.)"

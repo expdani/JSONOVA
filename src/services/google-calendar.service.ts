@@ -57,7 +57,6 @@ export class GoogleCalendarService {
 
   async createEvent(event: CalendarEventInput): Promise<calendar_v3.Schema$Event> {
     try {
-      // Add default reminders if not specified
       if (!event.reminders) {
         event.reminders = {
           useDefault: false,

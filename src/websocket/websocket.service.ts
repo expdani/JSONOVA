@@ -18,7 +18,6 @@ export class WebSocketService {
   }
 
   private createRequestFromHeaders(headers: IncomingMessage['headers']): Request {
-    // Create a partial Request object with the necessary properties
     const req = {
       cookies: {},
       headers,
@@ -26,7 +25,6 @@ export class WebSocketService {
       get: (name: string) => headers[name.toLowerCase()]
     } as Request;
 
-    // Parse cookies if they exist
     if (headers.cookie) {
       req.cookies = parseCookies(headers.cookie);
     }
@@ -38,7 +36,6 @@ export class WebSocketService {
     this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
       console.log('New WebSocket connection');
 
-      // Set up event listener for assistant responses
       const responseHandler = (response: any) => {
         ws.send(JSON.stringify({
           type: response.type,
@@ -57,7 +54,6 @@ export class WebSocketService {
             const request = this.createRequestFromHeaders(req.headers);
             const response = await this.assistant.chat(data.content, request);
             
-            // Send the final response (action result or error)
             ws.send(JSON.stringify({
               type: response.type,
               content: response.content
@@ -79,7 +75,6 @@ export class WebSocketService {
       });
 
       ws.on('close', () => {
-        // Clean up event listener
         this.assistant.removeListener('response', responseHandler);
         console.log('Client disconnected');
       });

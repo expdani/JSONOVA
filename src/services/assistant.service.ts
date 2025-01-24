@@ -6,6 +6,36 @@ import * as path from 'path';
 import { EventEmitter } from 'events';
 import { SYSTEM_PROMPT, ACTION_SUCCESS_PROMPT, ACTION_ERROR_PROMPT } from '../config/prompts.config';
 
+interface AIAction {
+  action: string;
+  data: Record<string, any>;
+}
+
+interface AIResponse {
+  message?: string;
+  action?: AIAction;
+  actions?: AIAction[];
+}
+
+interface ActionResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  [key: string]: any;
+}
+
+interface CombinedActionResults {
+  success: boolean;
+  results: ActionResult[];
+  summary: string;
+}
+
+interface AssistantResponse {
+  type: 'response' | 'error';
+  content: string;
+  actionResults?: CombinedActionResults;
+}
+
 export class AssistantService extends EventEmitter {
   private static instance: AssistantService;
   private deepseekService: DeepseekService;
@@ -20,8 +50,24 @@ export class AssistantService extends EventEmitter {
     this.initializeAssistant();
   }
 
-  private initializeAssistant() {
-    this.deepseekService.initializeChat(SYSTEM_PROMPT(this.capabilities));
+  private async initializeAssistant() {
+    try {
+      const hueState = await this.actionService.executeAction({
+        name: 'list_lights',
+        parameters: {}
+      }, {} as Request);
+
+      this.deepseekService.initializeChat(SYSTEM_PROMPT({
+        ...this.capabilities,
+        hue_state: {
+          lights: hueState.lights,
+          rooms: hueState.rooms
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to get Hue state:', error);
+      this.deepseekService.initializeChat(SYSTEM_PROMPT(this.capabilities));
+    }
   }
 
   public static getInstance(): AssistantService {
@@ -31,7 +77,7 @@ export class AssistantService extends EventEmitter {
     return AssistantService.instance;
   }
 
-  public async chat(message: string, req: Request) {
+  public async chat(message: string, req: Request): Promise<AssistantResponse> {
     return this.processMessage(message, req);
   }
 
@@ -40,12 +86,12 @@ export class AssistantService extends EventEmitter {
     this.initializeAssistant();
   }
 
-  private async processMessage(message: string, req: Request): Promise<any> {
+  private async processMessage(message: string, req: Request): Promise<AssistantResponse> {
     try {
       const response = await this.deepseekService.chat(message);
       console.log('AI Response:', response);
 
-      let parsedResponse;
+      let parsedResponse: AIResponse;
       try {
         parsedResponse = JSON.parse(response);
       } catch (e) {
@@ -55,7 +101,7 @@ export class AssistantService extends EventEmitter {
         };
       }
 
-      if (parsedResponse.action) {
+      if (parsedResponse.action || parsedResponse.actions) {
         if (parsedResponse.message) {
           this.emit('response', {
             type: 'response',
@@ -64,18 +110,39 @@ export class AssistantService extends EventEmitter {
         }
 
         try {
-          const actionResult = await this.actionService.executeAction({
-            name: parsedResponse.action.action,
-            parameters: parsedResponse.action.data
-          }, req);
+          let actionResults: ActionResult[] = [];
+          
+          if (Array.isArray(parsedResponse.actions)) {
+            actionResults = await Promise.all(
+              parsedResponse.actions.map(async (action: AIAction) => 
+                this.actionService.executeAction({
+                  name: action.action,
+                  parameters: action.data
+                }, req)
+              )
+            );
+          } else if (parsedResponse.action) {
+            const result = await this.actionService.executeAction({
+              name: parsedResponse.action.action,
+              parameters: parsedResponse.action.data
+            }, req);
+            actionResults = [result];
+          }
+
+          const combinedResults: CombinedActionResults = {
+            success: actionResults.every(result => !result.error),
+            results: actionResults,
+            summary: `Executed ${actionResults.length} action${actionResults.length > 1 ? 's' : ''}`
+          };
 
           const formattedResponse = await this.deepseekService.chat(
-            ACTION_SUCCESS_PROMPT(actionResult)
+            ACTION_SUCCESS_PROMPT(combinedResults)
           );
 
           return {
             type: 'response',
-            content: formattedResponse
+            content: formattedResponse,
+            actionResults: combinedResults
           };
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Unknown error';
