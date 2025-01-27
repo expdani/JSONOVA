@@ -28,6 +28,19 @@ app.use(express.static('public'));
 app.use('/auth', authRoutes);
 app.use('/hue', hueRoutes);
 
+app.get('/health/deepseek', async (req: Request, res: Response) => {
+  try {
+    const deepseekService = (await import('./services/deepseek.service')).DeepseekService.getInstance();
+    const health = await deepseekService.checkHealth();
+    res.json(health);
+  } catch (error: any) {
+    res.status(500).json({
+      isHealthy: false,
+      error: error.message || 'Failed to check Deepseek API health'
+    });
+  }
+});
+
 app.get('/', (req: Request, res: Response) => {
   res.sendFile('index.html', { root: './public' });
 });

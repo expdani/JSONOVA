@@ -13,12 +13,12 @@ interface AuthCallbackQuery {
   error?: string;
 }
 
-router.get('/auth/google', (_req: Request, res: Response) => {
+router.get('/google', (_req: Request, res: Response) => {
   const authUrl = oauthService.getAuthUrl();
   res.redirect(authUrl);
 });
 
-router.get('/auth/google/callback', async (req: Request<{}, {}, {}, AuthCallbackQuery>, res: Response) => {
+router.get('/google/callback', async (req: Request<{}, {}, {}, AuthCallbackQuery>, res: Response) => {
   try {
     const { code } = req.query;
     if (!code) {
@@ -35,7 +35,7 @@ router.get('/auth/google/callback', async (req: Request<{}, {}, {}, AuthCallback
   }
 });
 
-router.get('/auth/status', (req: Request, res: Response) => {
+router.get('/status', (req: Request, res: Response) => {
   const tokens = tokenService.getTokens(req);
   res.json({ 
     authenticated: !!tokens,
@@ -47,7 +47,7 @@ router.get('/auth/status', (req: Request, res: Response) => {
   });
 });
 
-router.post('/auth/logout', (_req: Request, res: Response) => {
+router.post('/logout', (_req: Request, res: Response) => {
   tokenService.clearTokens(res);
   res.json({ success: true });
 });

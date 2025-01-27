@@ -51,7 +51,6 @@ export class OAuthService {
 
   public async getTokens(code: string): Promise<GoogleTokens> {
     const { tokens } = await this.auth.getToken(code);
-    console.log('Got new tokens from OAuth:', tokens);
     
     if (!tokens.access_token) {
       throw new Error('No access token received');

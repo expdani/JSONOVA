@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { EventEmitter } from 'events';
 import { SYSTEM_PROMPT, ACTION_SUCCESS_PROMPT, ACTION_ERROR_PROMPT } from '../config/prompts.config';
+import { PhilipsHueService } from './philips-hue.service';
 
 interface AIAction {
   action: string;
@@ -39,29 +40,29 @@ interface AssistantResponse {
 export class AssistantService extends EventEmitter {
   private static instance: AssistantService;
   private deepseekService: DeepseekService;
+  private hueService: PhilipsHueService;
   private actionService: ActionService;
   private capabilities: any;
 
   private constructor() {
     super();
     this.deepseekService = DeepseekService.getInstance();
-    this.actionService = new ActionService();
+    this.actionService = ActionService.getInstance();
+    this.hueService = PhilipsHueService.getInstance();
     this.capabilities = JSON.parse(fs.readFileSync(path.join(__dirname, '../capabilities.json'), 'utf-8'));
     this.initializeAssistant();
   }
 
   private async initializeAssistant() {
     try {
-      const hueState = await this.actionService.executeAction({
-        name: 'list_lights',
-        parameters: {}
-      }, {} as Request);
+      const hueState = await this.hueService.handleAction("list_lights", {});
+      const roomState = await this.hueService.handleAction("list_rooms", {});
 
       this.deepseekService.initializeChat(SYSTEM_PROMPT({
         ...this.capabilities,
         hue_state: {
-          lights: hueState.lights,
-          rooms: hueState.rooms
+          lights: hueState,
+          rooms: roomState
         }
       }));
     } catch (error) {
@@ -88,13 +89,31 @@ export class AssistantService extends EventEmitter {
 
   private async processMessage(message: string, req: Request): Promise<AssistantResponse> {
     try {
-      const response = await this.deepseekService.chat(message);
-      console.log('AI Response:', response);
+      const currentTime = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      const [datePart, timePart] = currentTime.split(', ');
+      const [month, day, year] = datePart.split('/');
+      const isoDate = `${year}-${month}-${day}T${timePart}${new Date().getTimezoneOffset() === -60 ? '+01:00' : 'Z'}`;
+
+      const messageWithTime = `[Current Time: ${isoDate}] ${message}`;
+      console.log('[AssistantService] Processing message:', messageWithTime);
+      const response = await this.deepseekService.chat(messageWithTime);
+      console.log('[AssistantService] AI Response:', response);
 
       let parsedResponse: AIResponse;
       try {
         parsedResponse = JSON.parse(response);
+        console.log('[AssistantService] Parsed response:', parsedResponse);
       } catch (e) {
+        console.log('[AssistantService] Not a JSON response, returning as plain text');
         return {
           type: 'response',
           content: response
@@ -102,6 +121,11 @@ export class AssistantService extends EventEmitter {
       }
 
       if (parsedResponse.action || parsedResponse.actions) {
+        console.log('[AssistantService] Action(s) detected:', { 
+          action: parsedResponse.action, 
+          actions: parsedResponse.actions 
+        });
+
         if (parsedResponse.message) {
           this.emit('response', {
             type: 'response',
@@ -113,15 +137,18 @@ export class AssistantService extends EventEmitter {
           let actionResults: ActionResult[] = [];
           
           if (Array.isArray(parsedResponse.actions)) {
+            console.log('[AssistantService] Executing multiple actions');
             actionResults = await Promise.all(
-              parsedResponse.actions.map(async (action: AIAction) => 
-                this.actionService.executeAction({
+              parsedResponse.actions.map(async (action: AIAction) => {
+                console.log('[AssistantService] Executing action:', action);
+                return this.actionService.executeAction({
                   name: action.action,
                   parameters: action.data
-                }, req)
-              )
+                }, req);
+              })
             );
           } else if (parsedResponse.action) {
+            console.log('[AssistantService] Executing single action:', parsedResponse.action);
             const result = await this.actionService.executeAction({
               name: parsedResponse.action.action,
               parameters: parsedResponse.action.data
@@ -129,11 +156,15 @@ export class AssistantService extends EventEmitter {
             actionResults = [result];
           }
 
+          console.log('[AssistantService] Action results:', actionResults);
+
           const combinedResults: CombinedActionResults = {
             success: actionResults.every(result => !result.error),
             results: actionResults,
             summary: `Executed ${actionResults.length} action${actionResults.length > 1 ? 's' : ''}`
           };
+
+          console.log('[AssistantService] Combined results:', combinedResults);
 
           const formattedResponse = await this.deepseekService.chat(
             ACTION_SUCCESS_PROMPT(combinedResults)
@@ -145,6 +176,7 @@ export class AssistantService extends EventEmitter {
             actionResults: combinedResults
           };
         } catch (error) {
+          console.error('[AssistantService] Error executing action:', error);
           const errorMsg = error instanceof Error ? error.message : 'Unknown error';
           const formattedResponse = await this.deepseekService.chat(
             ACTION_ERROR_PROMPT(errorMsg)

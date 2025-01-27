@@ -1,14 +1,38 @@
 {
   "response_format": {
-    "action": {
-      "type": "calendar",
-      "action": "The specific action to perform (create_event, update_event, delete_event, list_events)",
-      "data": "Event data matching the action's required format"
+    "description": "IMPORTANT: When responding with actions, DO NOT include a message. The system will handle user feedback after the action is completed.",
+    "action_only": {
+      "description": "Use this format for single actions. Do not include a message field.",
+      "format": {
+        "action": {
+          "action": "string - Name of the action to perform",
+          "data": "object - Parameters required for the action"
+        }
+      }
+    },
+    "multiple_actions": {
+      "description": "Use this format for multiple actions. Do not include a message field.",
+      "format": {
+        "actions": [
+          {
+            "action": "string - Name of the action to perform",
+            "data": "object - Parameters required for the action"
+          }
+        ]
+      }
+    },
+    "message_only": {
+      "description": "Use this format for responses without actions",
+      "format": {
+        "message": "string - Your response message"
+      }
     }
   },
   "response_rules": [
-    "For simple responses without actions, just include the message",
-    "For actions, still always include a message",
+    "Never include both actions and messages in the same response",
+    "For actions, only include the action data without any message",
+    "The system will handle providing feedback after actions are completed",
+    "Only include a message field when no actions are being performed",
     "Always format responses as valid JSON"
   ],
   "integrations": {
@@ -142,9 +166,9 @@
         "Turning lights on/off",
         "Adjusting brightness",
         "Changing light colors",
-        "Listing all lights",
-        "Controlling rooms/groups",
-        "Turning all lights on/off"
+        "Managing groups/rooms",
+        "Listing available lights and rooms",
+        "Controlling multiple lights at once"
       ],
       "examples": [
         "Turn on the living room lights",
@@ -181,6 +205,14 @@
         }
       },
       "actions": {
+        "list_lights": {
+          "description": "Get a list of all available lights and their current state",
+          "data": {}
+        },
+        "list_rooms": {
+          "description": "Get a list of all rooms/groups and their current state",
+          "data": {}
+        },
         "turn_on": {
           "description": "Turn on a light or group of lights. IMPORTANT: Use lightId for specific lights, groupId for rooms. When matching light names, use fuzzy matching (e.g., 'kantoor 2' should match 'Kantoor 2 lamp'). Always verify the lightId exists.",
           "data": {
@@ -211,10 +243,6 @@
             "color": "string - The new color (e.g., 'red', 'blue', etc.)"
           }
         },
-        "list_lights": {
-          "description": "List all lights in the system",
-          "data": {}
-        },
         "control_group": {
           "description": "Control a group of lights. Only use this when explicitly controlling an entire room.",
           "data": {
@@ -229,6 +257,33 @@
         "turn_all_off": {
           "description": "Turn off all lights in the system",
           "data": {}
+        }
+      }
+    },
+    "time": {
+      "description": "Manage alarms and time-based notifications",
+      "understanding": [
+        "Setting alarms for specific times",
+        "Canceling existing alarms",
+        "Listing all active alarms"
+      ],
+      "actions": {
+        "set_alarm": {
+          "description": "Set a new alarm for a specific time. The message is optional and will be omitted if not specified.",
+          "parameters": {
+            "time": "string - ISO 8601 datetime string (e.g., '2025-01-27T20:00:00')",
+            "message": "string (optional) - Message to display when the alarm triggers. If not provided, a default alarm sound will be used."
+          }
+        },
+        "cancel_alarm": {
+          "description": "Cancel an existing alarm by its ID",
+          "parameters": {
+            "alarmId": "string - The ID of the alarm to cancel"
+          }
+        },
+        "list_alarms": {
+          "description": "Get a list of all active alarms",
+          "parameters": {}
         }
       }
     }

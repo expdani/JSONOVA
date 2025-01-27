@@ -166,8 +166,16 @@ export class PhilipsHueService {
     }
   }
 
-  public async handleAction(action: string, data: any): Promise<string> {
+  public async handleAction(action: string, data: any): Promise<any> {
     switch (action) {
+      case 'list_lights':
+        const lights = await this.getAllLights();
+        return lights;
+
+      case 'list_rooms':
+        const rooms = await this.getAllRooms();
+        return rooms;
+
       case 'turn_on':
         if (data.groupId) {
           await this.setRoomState(data.groupId, { on: true });
@@ -219,12 +227,6 @@ export class PhilipsHueService {
           await this.setLightState(data.lightId, colorSettings);
           return `Changed color to ${data.color} for light ${data.lightId}`;
         }
-
-      case 'list_lights':
-        const lights = await this.getAllLights();
-        return `Found ${lights.length} lights:\n${lights.map(light => 
-          `- ${light.name} (${light.id}): ${light.state.on ? 'On' : 'Off'}, Brightness: ${Math.round((light.state.bri / 254) * 100)}%`
-        ).join('\n')}`;
 
       case 'control_group':
         const state = { on: data.action === 'on' };
