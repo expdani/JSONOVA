@@ -22,7 +22,7 @@ yarn install
 
 3. Create a `.env` file in the project root with the following variables:
 ```env
-PORT=3000                         # Backend server port
+PORT=3001                        # Backend server port
 CLIENT_URL=http://localhost:3000  # Frontend URL
 GOOGLE_CLIENT_ID=your_client_id
 GOOGLE_CLIENT_SECRET=your_client_secret
@@ -37,7 +37,7 @@ PHILIPS_HUE_USERNAME=            # Will be generated during setup
 yarn build
 yarn start
 ```
-The server will start on port 3000 (HTTP) and 3001 (WebSocket).
+The server will start on port 3001 (HTTP) and 3002 (WebSocket).
 
 ### 2. Google Authentication Setup
 

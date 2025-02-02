@@ -10,8 +10,8 @@ import authRoutes from './routes/auth.routes';
 import hueRoutes from './routes/hue.routes';
 
 const app: Express = express();
-const port = process.env.PORT || 3000;
-const wsPort = 3001;
+const port = process.env.PORT || 3001;
+const wsPort = 3002;
 
 // Initialize WebSocket service
 new WebSocketService(wsPort);

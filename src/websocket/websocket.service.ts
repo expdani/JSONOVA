@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import { AssistantService } from '../services/assistant.service';
 import { TokenService } from '../services/token.service';
+import { TimeService } from '../services/time.service';
 import { parse as parseCookies } from 'cookie';
 import { IncomingMessage } from 'http';
 import { Request } from 'express';
@@ -9,11 +10,13 @@ export class WebSocketService {
   private wss: WebSocket.Server;
   private assistant: AssistantService;
   private tokenService: TokenService;
+  private timeService: TimeService;
 
   constructor(port: number) {
     this.wss = new WebSocket.Server({ port });
     this.assistant = AssistantService.getInstance();
     this.tokenService = TokenService.getInstance();
+    this.timeService = TimeService.getInstance();
     this.initialize();
   }
 
@@ -43,7 +46,15 @@ export class WebSocketService {
         }));
       };
 
+      const alarmHandler = (alarm: any) => {
+        ws.send(JSON.stringify({
+          type: 'alarm',
+          content: alarm
+        }));
+      };
+
       this.assistant.on('response', responseHandler);
+      this.timeService.onAlarm(alarmHandler);
 
       ws.on('message', async (message: string) => {
         try {
@@ -76,6 +87,7 @@ export class WebSocketService {
 
       ws.on('close', () => {
         this.assistant.removeListener('response', responseHandler);
+        this.timeService.offAlarm(alarmHandler);
         console.log('Client disconnected');
       });
     });

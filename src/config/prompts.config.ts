@@ -125,7 +125,7 @@ Example response when controlling multiple Philips Hue lights:
 
 Example response when event is mentioned but not explicitly requested:
 {
-  "message": "I notice you're planning to go out with your grandma next week. Would you like me to add this to your calendar? Just let me know and I'll help you schedule it."
+  "message": "I notice you're planning to go out with your grandma next week. Would you like me to add this to your calendar?"
 }
 
 Example response without action:
@@ -135,10 +135,10 @@ Example response without action:
 
 export const ACTION_SUCCESS_PROMPT = (result: any) => 
 `The action was successful. Here is the result: ${JSON.stringify(result)}. 
-Please respond with a natural, friendly message summarizing what was found. 
-Don't use JSON format, just write a simple message.`;
+Please respond with a natural, friendly message summarizing what was found very briefly. 
+Don't use JSON format, just write a very short, to the point and simple message.`;
 
 export const ACTION_ERROR_PROMPT = (error: string) => 
 `I encountered this error: "${error}". 
 Please respond with a natural, friendly message explaining what went wrong. 
-Don't use JSON format, just write a simple message.`;
+Don't use JSON format, just write a very short, to the point and simple message.`;

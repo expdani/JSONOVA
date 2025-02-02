@@ -4,6 +4,7 @@ class AssistantUI {
         this.chatContainer = document.getElementById('chat-container');
         this.messageForm = document.getElementById('message-form');
         this.messageInput = document.getElementById('message-input');
+        this.audio = document.getElementById('alarm-sound');
         this.setupWebSocket();
         this.setupMessageForm();
         this.setupThemeToggle();
@@ -69,6 +70,10 @@ class AssistantUI {
                 }
                 this.removeTypingIndicator();
             } 
+            // Handle alarm notifications
+            else if (data.type === 'alarm') {
+                this.handleAlarmNotification(data.content);
+            }
             // Error response
             else if (data.type === 'error') {
                 this.addSystemMessage(`Error: ${data.content}`);
@@ -86,6 +91,18 @@ class AssistantUI {
 
         this.ws.addEventListener('error', () => {
             this.addSystemMessage('Connection error. Please check if the server is running.');
+        });
+    }
+
+    handleAlarmNotification(alarm) {
+        this.addSystemMessage(`Alarm: ${alarm.message || "Time's up!"}`);
+        this.playAlarmSound();
+    }
+
+    playAlarmSound() {
+        this.audio.play().catch(error => {
+            console.error('Error playing alarm sound:', error);
+            this.addSystemMessage('Error playing alarm sound');
         });
     }
 

@@ -196,16 +196,12 @@ export class TimeService {
     return `${seconds} second${seconds !== 1 ? 's' : ''}`;
   }
 
-  public onAlarm(callback: (alarm: Alarm) => void): void {
-    console.log('[TimeService] Registering alarm callback');
-    this.eventEmitter.on('alarm', (alarm) => {
-      console.log('[TimeService] Executing alarm callback:', {
-        alarmId: alarm.id,
-        message: alarm.message,
-        time: alarm.time.toLocaleString()
-      });
-      callback(alarm);
-    });
+  public onAlarm(listener: (alarm: Alarm) => void): void {
+    this.eventEmitter.on('alarm', listener);
+  }
+
+  public offAlarm(listener: (alarm: Alarm) => void): void {
+    this.eventEmitter.removeListener('alarm', listener);
   }
 
   public dispose(): void {
