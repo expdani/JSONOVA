@@ -20,14 +20,12 @@ const App = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // WebSocket setup with proper error handling
   const { sendMessage, lastMessage, readyState } = useWebSocket(WS_URL, {
     shouldReconnect: () => true,
     reconnectAttempts: 3,
     reconnectInterval: 3000,
   });
 
-  // Message handlers
   const addMessage = useCallback((role: Message['role'], content: string) => {
     setMessages(prev => [...prev, { role, content }]);
   }, []);
@@ -36,7 +34,6 @@ const App = () => {
     addMessage('system', content);
   }, [addMessage]);
 
-  // WebSocket connection status handler
   useEffect(() => {
     const connectionStatus = {
       [ReadyState.CONNECTING]: 'Connecting to Assistant...',
@@ -49,7 +46,6 @@ const App = () => {
     addSystemMessage(connectionStatus[readyState]);
   }, [readyState, addSystemMessage]);
 
-  // Message handler for incoming WebSocket messages
   const handleWebSocketMessage = useCallback((data: WebSocketMessage) => {
     switch (data.type) {
       case 'response': {
@@ -87,7 +83,6 @@ const App = () => {
     }
   }, [addMessage, addSystemMessage]);
 
-  // Process incoming WebSocket messages
   useEffect(() => {
     if (!lastMessage?.data) return;
 
@@ -104,12 +99,10 @@ const App = () => {
     }
   }, [lastMessage, handleWebSocketMessage, addSystemMessage]);
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Message submission handler
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!messageInput.trim()) return;
